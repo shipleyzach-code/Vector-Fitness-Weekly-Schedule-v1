@@ -147,7 +147,8 @@ def assign_lift_details(schedule, goal):
 # ------------------------------
 
 # Logo + Header
-logo = Image.open("vector_logo.png")  # replace with your logo path
+from PIL import Image
+logo = Image.open("VFC_Secondary Black.png")  # replace with your logo path
 st.image(logo, width=200)
 
 st.markdown(
