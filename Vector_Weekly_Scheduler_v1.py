@@ -2,6 +2,15 @@ import streamlit as st
 import csv
 import io
 import random
+from PIL import Image
+
+# ------------------------------
+# VECTOR BRAND COLORS
+# ------------------------------
+PRIMARY_COLOR = "#5781C1"    # Light blue
+SECONDARY_COLOR = "#385989"  # Dark blue
+ACCENT_COLOR = "#E6E7E8"     # Light gray
+WHITE_COLOR = "#FFFFFF"
 
 # ------------------------------
 # VECTOR MINDSET TIPS
@@ -47,7 +56,6 @@ DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sun
 # ------------------------------
 def adjust_for_goal(template, experience, goal):
     template = template.copy()
-
     # Advanced hybrid run assignment
     if goal == "hybrid" and experience == "advanced":
         run_days = [i for i, w in enumerate(template) if "Run" in w]
@@ -137,26 +145,41 @@ def assign_lift_details(schedule, goal):
 # ------------------------------
 # STREAMLIT APP
 # ------------------------------
-st.title("Vector Weekly Training Plan Generator")
-st.write("Generate a personalized weekly schedule based on your experience and goals.")
 
-# User inputs
-experience = st.selectbox("Experience Level", ["beginner", "intermediate", "advanced"])
+# Logo + Header
+logo = Image.open("vector_logo.png")  # replace with your logo path
+st.image(logo, width=200)
 
-# Days available slider based on experience
-days_options = {
-    "beginner": (3,4),
-    "intermediate": (4,5),
-    "advanced": (5,6)
-}
-days_available = st.slider(
+st.markdown(
+    f"""
+    <div style='text-align: center;'>
+        <h1 style='color:{PRIMARY_COLOR};'>Vector Weekly Training Plan</h1>
+        <p style='font-size:16px; color:{SECONDARY_COLOR};'>
+            Build your personalized hybrid / endurance plan and crush your goals
+        </p>
+    </div>
+    """, unsafe_allow_html=True
+)
+
+# Sidebar for inputs
+st.sidebar.header("Set Your Plan")
+st.sidebar.markdown(
+    f"<div style='background-color:{SECONDARY_COLOR}; padding:10px; border-radius:5px; color:{WHITE_COLOR};'>"
+    "Choose your experience, days/week, and training goal</div>",
+    unsafe_allow_html=True
+)
+
+experience = st.sidebar.selectbox("Experience Level", ["beginner", "intermediate", "advanced"])
+days_options = {"beginner": (3,4), "intermediate": (4,5), "advanced": (5,6)}
+days_available = st.sidebar.slider(
     "Days you can train per week",
     min_value=days_options[experience][0],
     max_value=days_options[experience][1],
     value=days_options[experience][0]
 )
-
-goal = st.selectbox("Training Goal", ["general", "hybrid", "running", "strength"])
+goal = st.sidebar.selectbox("Training Goal", ["general", "hybrid", "running", "strength"])
+st.sidebar.markdown("---")
+st.sidebar.write("👀 Fill in your preferences, then hit 'Generate Schedule' below!")
 
 # Generate schedule
 if st.button("Generate Schedule"):
@@ -165,10 +188,21 @@ if st.button("Generate Schedule"):
     weekly_schedule = build_weekly_schedule(adjusted_template, days_available)
     weekly_schedule = assign_lift_details(weekly_schedule, goal)
 
-    # Display schedule
+    # Display schedule with accent color boxes
     st.subheader("Your Weekly Schedule")
-    schedule_text = "\n".join([f"{day}: {workout}" for day, workout in weekly_schedule.items()])
-    st.text_area("Schedule", schedule_text, height=300)
+    for day, workout in weekly_schedule.items():
+        st.markdown(
+            f"<div style='background-color:{ACCENT_COLOR}; color:{SECONDARY_COLOR}; padding:10px; border-radius:5px; margin-bottom:6px;'>"
+            f"<strong>{day}:</strong> {workout}</div>", unsafe_allow_html=True
+        )
+
+    # Mindset Tip
+    st.markdown("---")
+    st.markdown(
+        f"<div style='background-color:{PRIMARY_COLOR}; color:white; padding:12px; border-radius:5px; text-align:center;'>"
+        f"💡 Mindset Tip of the Week: {get_random_tip()}</div>",
+        unsafe_allow_html=True
+    )
 
     # Prepare CSV for download
     output = io.StringIO()
@@ -177,5 +211,11 @@ if st.button("Generate Schedule"):
     for day, workout in weekly_schedule.items():
         writer.writerow([day, workout])
     writer.writerow([])
-    writer.writerow(["Mindset Tip", random.choice(MINDSET_TIPS)])
+    writer.writerow(["Mindset Tip", get_random_tip()])
     st.download_button("Download CSV", output.getvalue(), file_name="weekly_plan.csv")
+
+# Footer
+st.markdown(
+    f"<div style='text-align:center; color:{SECONDARY_COLOR}; font-size:12px;'>Powered by Vector Fitness Club 🚀</div>",
+    unsafe_allow_html=True
+)
